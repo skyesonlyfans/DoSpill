@@ -5,12 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#5856d6"/>
     
-    <!-- PWA Meta Tags -->
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="DoSpill">
-    <!-- Updated to use a placeholder icon URL -->
     <link rel="apple-touch-icon" href="https://placehold.co/192x192/5856d6/FFFFFF?text=DS">
 
     <title>DoSpill by Skye &lt;3</title>
@@ -18,7 +16,6 @@
     <link rel="manifest" href="/manifest.json">
     <link rel="stylesheet" href="/styles/main.css">
     
-    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -27,19 +24,13 @@
 <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
     
-    <!-- The root element where the app will be rendered -->
     <div id="root">
-        <!-- Initial loading state -->
         <div class="loading-container">
             <h1 class="auth-logo">Do<span>Spill</span></h1>
             <p>Initializing...</p>
         </div>
     </div>
 
-    <!-- 
-        This is a generic modal structure. 
-        It will be manipulated by JS to show different kinds of dialogs.
-    -->
     <div id="modal-backdrop" class="modal-backdrop" style="display: none;">
         <div class="modal-box">
             <h3 id="modal-title">Modal Title</h3>
@@ -54,7 +45,6 @@
         </div>
     </div>
 
-    <!-- App Initialization Script -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
 

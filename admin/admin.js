@@ -66,24 +66,35 @@ document.addEventListener('DOMContentLoaded', () => {
         loginError.textContent = ''; // Clear previous errors
 
         try {
-            // Call the new serverless function to check credentials
             const response = await fetch('/api/admin-login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username: user, password: pass })
             });
 
-            const data = await response.json();
+            // Try to parse the JSON response body.
+            let data;
+            try {
+                data = await response.json();
+            } catch (jsonError) {
+                // If the response isn't valid JSON, display a generic error.
+                console.error('Failed to parse JSON from response:', jsonError);
+                loginError.textContent = `An unexpected error occurred (Status: ${response.status}).`;
+                return;
+            }
 
+            // Check for a successful response (HTTP 200-299) AND the success flag in the body.
             if (response.ok && data.success) {
                 sessionStorage.setItem('adminAuthenticated', 'true');
                 showAdminPanel();
             } else {
+                // Use the message from the API, or a default message if none is provided.
                 loginError.textContent = data.message || 'Invalid username or password.';
             }
         } catch (error) {
-            console.error('Admin login error:', error);
-            loginError.textContent = 'An error occurred. Please try again.';
+            // This catches network errors or other issues with the fetch call itself.
+            console.error('Admin login fetch error:', error);
+            loginError.textContent = 'Network error. Please check your connection.';
         }
     });
 
