@@ -1,5 +1,5 @@
-// app.js - Main Application Script for DoSpill
-// This file handles the main application logic, including user authentication, chat management, and UI rendering
+// js/app.js
+
 import {
     getAuth,
     onAuthStateChanged,

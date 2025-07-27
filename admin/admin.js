@@ -1,5 +1,4 @@
-// admin.js - Admin Panel Script for User and Content Management
-// This script handles the admin login, user management, and content moderation functionalities.
+// admin/admin.js
 import {
     getFirestore,
     collection,
@@ -60,17 +59,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // --- Authentication Logic ---
-    loginForm.addEventListener('submit', (e) => {
+    loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const user = document.getElementById('admin-user').value;
         const pass = document.getElementById('admin-pass').value;
+        loginError.textContent = ''; // Clear previous errors
 
-        // Corrected hardcoded credentials as per instructions
-        if (user === 'oxyisbad' && pass === 'Bas3sec639') {
-            sessionStorage.setItem('adminAuthenticated', 'true');
-            showAdminPanel();
-        } else {
-            loginError.textContent = 'Invalid username or password.';
+        try {
+            // Call the new serverless function to check credentials
+            const response = await fetch('/api/admin-login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: user, password: pass })
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                sessionStorage.setItem('adminAuthenticated', 'true');
+                showAdminPanel();
+            } else {
+                loginError.textContent = data.message || 'Invalid username or password.';
+            }
+        } catch (error) {
+            console.error('Admin login error:', error);
+            loginError.textContent = 'An error occurred. Please try again.';
         }
     });
 

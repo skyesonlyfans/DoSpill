@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DoSpill Admin Panel</title>
-    <link rel="stylesheet" href="style.css">
+    <!-- Corrected path to be absolute from the root -->
+    <link rel="stylesheet" href="/admin/style.css">
     
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -97,8 +98,8 @@
                 // Initialize Firebase
                 initializeApp(firebaseConfig);
 
-                // Load the admin panel logic
-                await import('./admin.js');
+                // Load the admin panel logic using the corrected absolute path
+                await import('/admin/admin.js');
 
             } catch (error) {
                 console.error("Failed to initialize admin panel:", error);

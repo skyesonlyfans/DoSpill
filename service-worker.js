@@ -1,14 +1,15 @@
 // service-worker.js
 
-const CACHE_NAME = 'dospill-cache-v2';
+const CACHE_NAME = 'dospill-cache-v3';
 // Add all essential files for the app shell to be cached
 const urlsToCache = [
   '/',
   '/index.html',
   '/styles/main.css',
   '/js/app.js',
-  '/icons/icon-192x192.png',
-  '/icons/icon-512x512.png',
+  // Updated to cache the placeholder icon URLs
+  'https://placehold.co/192x192/5856d6/FFFFFF?text=DS',
+  'https://placehold.co/512x512/5856d6/FFFFFF?text=DS',
   'https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&display=swap',
   'https://fonts.gstatic.com/s/lexend/v17/wlptgwvFAVcsY-ixp-w.woff2' // Caching the font file itself
 ];
@@ -20,7 +21,12 @@ self.addEventListener('install', event => {
     caches.open(CACHE_NAME)
       .then(cache => {
         console.log('Opened cache');
-        return cache.addAll(urlsToCache);
+        // Use addAll with a new Request object for cross-origin URLs
+        const cachePromises = urlsToCache.map(urlToCache => {
+            const request = new Request(urlToCache, {mode: 'no-cors'});
+            return cache.add(request);
+        });
+        return Promise.all(cachePromises);
       })
       .catch(err => {
         console.error('Failed to open cache: ', err);
@@ -44,11 +50,8 @@ self.addEventListener('fetch', event => {
         return fetch(fetchRequest).then(
           response => {
             // Check if we received a valid response
-            if (!response || response.status !== 200 || response.type !== 'basic') {
-              // Don't cache opaque responses (e.g. from CDNs without CORS)
-              if(response.type === 'opaque') {
-                  return response;
-              }
+            if (!response || response.status !== 200) {
+              return response;
             }
 
             // Clone the response because it's also a one-time use stream.
