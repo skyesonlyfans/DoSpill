@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DoSpill Admin Panel</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="login-container">
+        <div class="login-box">
+            <h1>Admin Login</h1>
+            <form id="admin-login-form">
+                <input type="text" id="admin-user" placeholder="Username" required>
+                <input type="password" id="admin-pass" placeholder="Password" required>
+                <button type="submit">Login</button>
+                <p id="login-error"></p>
+            </form>
+        </div>
+    </div>
+
+    <div id="admin-panel" style="display: none;">
+        <header class="admin-header">
+            <h1>DoSpill Admin</h1>
+            <button id="admin-logout-btn">Logout</button>
+        </header>
+        <main class="admin-main">
+            <section class="stats-grid">
+                <div class="stat-card">
+                    <h2>Total Users</h2>
+                    <p id="total-users-stat">0</p>
+                </div>
+                <div class="stat-card">
+                    <h2>Active Users (24h)</h2>
+                    <p id="active-users-stat">0</p>
+                </div>
+                <div class="stat-card">
+                    <h2>Total Messages</h2>
+                    <p id="total-messages-stat">0</p>
+                </div>
+                <div class="stat-card">
+                    <h2>Reported Users</h2>
+                    <p id="reported-users-stat">0</p>
+                </div>
+            </section>
+
+            <section class="admin-section">
+                <h2>User Management</h2>
+                <div class="table-container" id="user-management-table">
+                    <!-- User data will be populated here -->
+                </div>
+            </section>
+
+            <section class="admin-section">
+                <h2>Reported Content</h2>
+                <div class="table-container" id="reported-content-table">
+                    <!-- Reported messages/users will be populated here -->
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+        const firebaseConfig = {
+            // NOTE: Replace with your actual Firebase config from your project settings
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            databaseURL: "YOUR_DATABASE_URL",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+        const app = initializeApp(firebaseConfig);
+    </script>
+    <script src="admin.js" type="module"></script>
+
+</body>
+</html>
