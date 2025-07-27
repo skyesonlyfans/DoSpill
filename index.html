@@ -81,46 +81,155 @@
     </script>
 
     <script>
-        // Register Service Worker with improved error handling
+        // Register Service Worker with robust error handling and retry logic
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', async () => {
+            let registrationAttempts = 0;
+            const maxAttempts = 3;
+            let registrationPromise = null; // Singleton pattern to prevent multiple registrations
+            
+            async function registerServiceWorker() {
+                // If registration is already in progress, wait for it
+                if (registrationPromise) {
+                    console.log('Service worker registration already in progress, waiting...');
+                    return registrationPromise;
+                }
+                
+                registrationPromise = performRegistration();
+                return registrationPromise;
+            }
+            
+            async function performRegistration() {
+                registrationAttempts++;
+                console.log(`ServiceWorker registration attempt ${registrationAttempts}/${maxAttempts}`);
+                
                 try {
-                    // Unregister any existing service workers first
-                    const registrations = await navigator.serviceWorker.getRegistrations();
-                    for (const registration of registrations) {
-                        await registration.unregister();
-                        console.log('Unregistered old service worker:', registration.scope);
+                    console.log('Starting service worker registration process...');
+                    
+                    // First, check if we already have a registration
+                    console.log('Checking for existing registrations...');
+                    const existingRegistration = await navigator.serviceWorker.getRegistration('/');
+                    if (existingRegistration) {
+                        console.log('Found existing service worker registration:', existingRegistration);
+                        console.log('Active worker:', existingRegistration.active);
+                        console.log('Installing worker:', existingRegistration.installing);
+                        console.log('Waiting worker:', existingRegistration.waiting);
+                        
+                        // Check if it's the same script
+                        if (existingRegistration.active && existingRegistration.active.scriptURL.includes('service-worker-simple.js')) {
+                            console.log('Service worker already registered and active');
+                            setupServiceWorkerListeners(existingRegistration);
+                            return;
+                        } else {
+                            // Unregister if it's a different script
+                            console.log('Unregistering old service worker:', existingRegistration.active?.scriptURL);
+                            await existingRegistration.unregister();
+                            console.log('Old service worker unregistered');
+                            // Wait a bit for cleanup
+                            await new Promise(resolve => setTimeout(resolve, 500));
+                        }
+                    } else {
+                        console.log('No existing service worker registration found');
                     }
                     
                     // Register the new service worker
-                    const registration = await navigator.serviceWorker.register('/service-worker.js', {
-                        scope: '/'
+                    console.log('Registering new service worker');
+                    const registration = await navigator.serviceWorker.register('/service-worker-simple.js', {
+                        scope: '/',
+                        updateViaCache: 'none' // Always check for updates
                     });
                     
                     console.log('ServiceWorker registration successful with scope:', registration.scope);
-                    
-                    // Handle updates
-                    registration.addEventListener('updatefound', () => {
-                        const newWorker = registration.installing;
-                        if (newWorker) {
-                            newWorker.addEventListener('statechange', () => {
-                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                    console.log('New service worker available, will refresh on next visit');
-                                }
-                            });
-                        }
-                    });
+                    setupServiceWorkerListeners(registration);
                     
                 } catch (error) {
-                    console.warn('ServiceWorker registration failed:', error);
-                    // Don't block the app if service worker fails
+                    console.warn(`ServiceWorker registration attempt ${registrationAttempts} failed:`, error);
+                    
+                    // Reset the promise so we can retry
+                    registrationPromise = null;
+                    
+                    // Retry with exponential backoff
+                    if (registrationAttempts < maxAttempts) {
+                        const delay = Math.pow(2, registrationAttempts) * 1000; // 2s, 4s, 8s
+                        console.log(`Retrying service worker registration in ${delay}ms`);
+                        setTimeout(() => {
+                            registerServiceWorker();
+                        }, delay);
+                    } else {
+                        console.error('ServiceWorker registration failed after all attempts. App will work without offline capabilities.');
+                    }
+                    throw error; // Re-throw for the promise chain
                 }
-            });
+            }
+            
+            function setupServiceWorkerListeners(registration) {
+                // Handle updates
+                registration.addEventListener('updatefound', () => {
+                    console.log('Service worker update found');
+                    const newWorker = registration.installing;
+                    if (newWorker) {
+                        newWorker.addEventListener('statechange', () => {
+                            console.log('Service worker state changed to:', newWorker.state);
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                console.log('New service worker installed, will be active on next page load');
+                                // Optionally show update notification to user
+                                showUpdateNotification();
+                            }
+                        });
+                    }
+                });
+                
+                // Handle controller change
+                navigator.serviceWorker.addEventListener('controllerchange', () => {
+                    console.log('Service worker controller changed');
+                    // Optionally reload the page to use the new service worker
+                });
+            }
+            
+            function showUpdateNotification() {
+                // Simple update notification (you can make this more sophisticated)
+                if (window.confirm('A new version of DoSpill is available. Reload to update?')) {
+                    window.location.reload();
+                }
+            }
+            
+            // Start registration when page loads and is stable
+            function startRegistration() {
+                // Add a small delay to ensure the page is fully stable
+                setTimeout(() => {
+                    registerServiceWorker().catch(error => {
+                        console.error('Final service worker registration failed:', error);
+                    });
+                }, 100);
+            }
+            
+            if (document.readyState === 'loading') {
+                window.addEventListener('load', startRegistration);
+            } else {
+                // Page already loaded
+                startRegistration();
+            }
             
             // Listen for service worker messages
             navigator.serviceWorker.addEventListener('message', event => {
                 console.log('Message from service worker:', event.data);
+                
+                if (event.data && event.data.type === 'UPDATE_AVAILABLE') {
+                    showUpdateNotification();
+                }
             });
+            
+            // Handle page visibility changes to check for updates
+            document.addEventListener('visibilitychange', () => {
+                if (!document.hidden) {
+                    // Page became visible, check for service worker updates
+                    navigator.serviceWorker.getRegistration('/').then(registration => {
+                        if (registration) {
+                            registration.update();
+                        }
+                    });
+                }
+            });
+            
         } else {
             console.log('Service workers are not supported in this browser');
         }

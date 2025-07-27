@@ -1,7 +1,9 @@
 // service-worker.js
+console.log('[ServiceWorker] Script loaded');
 
 // Incrementing the cache name is crucial for updates.
-const CACHE_NAME = 'dospill-cache-v6';
+const CACHE_NAME = 'dospill-cache-v7';
+console.log('[ServiceWorker] Cache name:', CACHE_NAME);
 
 // Essential local files that form the "app shell".
 const APP_SHELL_URLS = [
@@ -32,49 +34,47 @@ const EXTERNAL_URLS = [
 self.addEventListener('install', event => {
   console.log('[ServiceWorker] Install');
   
-  // Skip waiting to activate immediately
-  self.skipWaiting();
-  
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(async cache => {
-        console.log('[ServiceWorker] Caching app shell');
+    (async () => {
+      try {
+        const cache = await caches.open(CACHE_NAME);
+        console.log('[ServiceWorker] Opened cache:', CACHE_NAME);
         
-        // Cache app shell files
-        try {
-          await cache.addAll(APP_SHELL_URLS);
-          console.log('[ServiceWorker] App shell cached successfully');
-        } catch (error) {
-          console.error('[ServiceWorker] Failed to cache app shell:', error);
-          // Try to cache files individually to identify problematic ones
-          for (const url of APP_SHELL_URLS) {
-            try {
-              await cache.add(url);
-              console.log(`[ServiceWorker] Cached: ${url}`);
-            } catch (err) {
-              console.error(`[ServiceWorker] Failed to cache: ${url}`, err);
-            }
+        // Cache essential files one by one for better error handling
+        const cachePromises = APP_SHELL_URLS.map(async url => {
+          try {
+            await cache.add(url);
+            console.log(`[ServiceWorker] Cached: ${url}`);
+          } catch (error) {
+            console.warn(`[ServiceWorker] Failed to cache: ${url}`, error);
+            // Don't fail the entire installation for individual files
           }
-        }
+        });
         
-        // Cache external resources
-        try {
-          for (const url of EXTERNAL_URLS) {
-            try {
-              await cache.add(url);
-              console.log(`[ServiceWorker] Cached external: ${url}`);
-            } catch (err) {
-              console.warn(`[ServiceWorker] Failed to cache external: ${url}`, err);
-              // Don't fail the entire installation for external resources
-            }
+        await Promise.allSettled(cachePromises);
+        console.log('[ServiceWorker] App shell caching completed');
+        
+        // Cache external resources (non-blocking)
+        const externalPromises = EXTERNAL_URLS.map(async url => {
+          try {
+            await cache.add(url);
+            console.log(`[ServiceWorker] Cached external: ${url}`);
+          } catch (error) {
+            console.warn(`[ServiceWorker] Failed to cache external: ${url}`, error);
           }
-        } catch (error) {
-          console.warn('[ServiceWorker] Some external resources failed to cache:', error);
-        }
-      })
-      .catch(error => {
-        console.error('[ServiceWorker] Failed to open cache:', error);
-      })
+        });
+        
+        await Promise.allSettled(externalPromises);
+        console.log('[ServiceWorker] External resource caching completed');
+        
+        // Skip waiting to activate immediately
+        self.skipWaiting();
+        
+      } catch (error) {
+        console.error('[ServiceWorker] Install failed:', error);
+        throw error; // Re-throw to fail the installation
+      }
+    })()
   );
 });
 
@@ -242,18 +242,34 @@ self.addEventListener('fetch', event => {
 });
 
 /**
+ * Error Event
+ * Handle any uncaught errors in the service worker
+ */
+self.addEventListener('error', event => {
+  console.error('[ServiceWorker] Error:', event.error);
+});
+
+self.addEventListener('unhandledrejection', event => {
+  console.error('[ServiceWorker] Unhandled promise rejection:', event.reason);
+});
+
+/**
  * Message Event
  * Handle messages from the main thread
  */
 self.addEventListener('message', event => {
   console.log('[ServiceWorker] Message received:', event.data);
   
-  if (event.data && event.data.type === 'SKIP_WAITING') {
-    self.skipWaiting();
-  }
-  
-  if (event.data && event.data.type === 'GET_VERSION') {
-    event.ports[0].postMessage({ version: CACHE_NAME });
+  try {
+    if (event.data && event.data.type === 'SKIP_WAITING') {
+      self.skipWaiting();
+    }
+    
+    if (event.data && event.data.type === 'GET_VERSION') {
+      event.ports[0].postMessage({ version: CACHE_NAME });
+    }
+  } catch (error) {
+    console.error('[ServiceWorker] Error handling message:', error);
   }
 });
 
