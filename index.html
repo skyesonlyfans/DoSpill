@@ -3,34 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="theme-color" content="#000000"/>
-
-    <!-- PWA for iOS -->
+    <meta name="theme-color" content="#5856d6"/>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="DoSpill">
     <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
 
-
     <title>DoSpill by Skye &lt;3</title>
 
     <link rel="manifest" href="/manifest.json">
     <link rel="stylesheet" href="/styles/main.css">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- Firebase SDK -->
     <script type="module">
         // Import the functions you need from the SDKs you need
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
         
         // Your web app's Firebase configuration
         // In a real build process, these would be replaced by environment variables.
         const firebaseConfig = {
-            apiKey: "AIzaSyDbuOshtvba_nu10EJR4bmphASL9kHqFsM",
-            authDomain: "dospill-app.firebaseapp.com",
-            projectId: "dospill-app",
-            storageBucket: "dospill-app.firebasestorage.app",
-            messagingSenderId: "1023341221579",
-            appId: "1:1023341221579:web:783f5ad8bf2da2003d6d4e"
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            databaseURL: "YOUR_DATABASE_URL",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
         };
 
         // Initialize Firebase
@@ -40,6 +46,8 @@
 </head>
 <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
+    
+    <!-- The root element where the app will be rendered -->
     <div id="root"></div>
 
     <!-- 
@@ -48,18 +56,17 @@
     -->
     <div id="modal-backdrop" class="modal-backdrop" style="display: none;">
         <div class="modal-box">
-            <h3 id="modal-title"></h3>
-            <p id="modal-text"></p>
+            <h3 id="modal-title">Modal Title</h3>
+            <p id="modal-text">Modal text goes here.</p>
             <div id="modal-input-container" style="display: none;">
                 <input type="text" id="modal-input" placeholder="Enter value...">
             </div>
-            <div id="modal-buttons" class="modal-buttons">
-                <button id="modal-cancel-btn">Cancel</button>
-                <button id="modal-confirm-btn">Confirm</button>
+            <div id="modal-buttons">
+                <button id="modal-cancel-btn" class="modal-btn modal-btn-cancel">Cancel</button>
+                <button id="modal-confirm-btn" class="modal-btn modal-btn-confirm">Confirm</button>
             </div>
         </div>
     </div>
-
 
     <!-- Main App Logic -->
     <script src="/js/app.js" type="module"></script>

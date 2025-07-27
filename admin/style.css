@@ -1,93 +1,119 @@
-/* admin/style.css */
-body {
-    font-family: 'Inter', sans-serif;
-    background-color: #f0f2f5;
-    margin: 0;
-    color: #1c1e21;
+:root {
+    --primary-purple: #5856d6;
+    --background-dark: #1c1c1e;
+    --background-light: #f2f2f7;
+    --component-bg: #ffffff;
+    --component-bg-dark: #2c2c2e;
+    --text-dark: #000000;
+    --text-light: #ffffff;
+    --text-secondary: #8e8e93;
+    --border-color: #e5e5ea;
+    --error-red: #ff3b30;
+    --success-green: #34c759;
+    --font-family: 'Lexend', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --border-radius: 12px;
+    --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
-/* --- Login Page --- */
-#login-container {
+body {
+    font-family: var(--font-family);
+    margin: 0;
+    background-color: var(--background-light);
+    color: var(--text-dark);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* --- Login View --- */
+.login-view {
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
-    background-color: #1c1c1e;
+    background-color: var(--background-dark);
 }
 
 .login-box {
-    background: #2c2c2e;
+    background: var(--component-bg-dark);
     padding: 40px;
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    border-radius: var(--border-radius);
+    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.3);
     text-align: center;
     width: 100%;
-    max-width: 360px;
-    color: #ffffff;
+    max-width: 380px;
+    color: var(--text-light);
 }
 
-.login-box h1 {
+.login-logo {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary-purple);
+    margin-bottom: 8px;
+}
+.login-logo span {
+    font-weight: 400;
+    color: var(--text-light);
+}
+
+.login-box p {
+    color: var(--text-secondary);
     margin-bottom: 24px;
-    font-size: 24px;
-    font-weight: 600;
+}
+
+#admin-login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
 }
 
 #admin-login-form input {
     width: 100%;
-    padding: 12px;
-    margin-bottom: 16px;
+    padding: 14px;
     border: 1px solid #444;
     border-radius: 8px;
     background-color: #3a3a3c;
-    color: #ffffff;
-    font-size: 16px;
+    color: var(--text-light);
+    font-size: 1rem;
 }
 
-#admin-login-form button {
-    width: 100%;
-    padding: 12px;
+.login-btn {
+    padding: 14px;
     border: none;
     border-radius: 8px;
-    background-color: #007aff;
+    background-color: var(--primary-purple);
     color: white;
-    font-size: 16px;
+    font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
     transition: background-color 0.2s ease;
 }
-
-#admin-login-form button:hover {
-    background-color: #0056b3;
+.login-btn:hover {
+    background-color: #4a48b9;
 }
 
-#login-error {
-    color: #ff3b30;
-    margin-top: 16px;
+.login-error-message {
+    color: var(--error-red);
+    margin-top: 8px;
     height: 20px;
+    font-size: 0.9rem;
 }
-
 
 /* --- Admin Panel --- */
-#admin-panel {
-    display: none; /* Hidden by default */
-}
-
 .admin-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 0 24px;
     height: 64px;
-    background-color: #ffffff;
-    border-bottom: 1px solid #dddfe2;
+    background-color: var(--component-bg);
+    border-bottom: 1px solid var(--border-color);
 }
-
 .admin-header h1 {
-    font-size: 20px;
-    font-weight: 700;
+    font-size: 1.5rem;
+    font-weight: 600;
 }
 
-#admin-logout-btn {
+.logout-btn {
     background-color: #e4e6eb;
     border: none;
     border-radius: 8px;
@@ -96,8 +122,7 @@ body {
     cursor: pointer;
     transition: background-color 0.2s ease;
 }
-
-#admin-logout-btn:hover {
+.logout-btn:hover {
     background-color: #dcdde1;
 }
 
@@ -105,44 +130,39 @@ body {
     padding: 24px;
 }
 
-/* --- Stats --- */
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 20px;
     margin-bottom: 32px;
 }
 
 .stat-card {
-    background-color: #ffffff;
+    background-color: var(--component-bg);
     padding: 20px;
-    border-radius: 12px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
 }
-
 .stat-card h2 {
-    font-size: 14px;
-    color: #65676b;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
     margin-bottom: 8px;
     font-weight: 500;
 }
-
 .stat-card p {
-    font-size: 28px;
+    font-size: 2rem;
     font-weight: 700;
 }
 
-/* --- Sections & Tables --- */
 .admin-section {
-    background-color: #ffffff;
+    background-color: var(--component-bg);
     padding: 20px;
-    border-radius: 12px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
     margin-bottom: 24px;
 }
-
 .admin-section h2 {
-    font-size: 18px;
+    font-size: 1.2rem;
     font-weight: 600;
     margin-bottom: 16px;
 }
@@ -160,29 +180,28 @@ table {
 th, td {
     padding: 12px 16px;
     text-align: left;
-    border-bottom: 1px solid #dddfe2;
+    border-bottom: 1px solid var(--border-color);
     white-space: nowrap;
 }
 
 th {
     background-color: #f5f6f7;
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 600;
-    color: #65676b;
+    color: var(--text-secondary);
     text-transform: uppercase;
 }
 
 td {
-    font-size: 14px;
+    font-size: 0.9rem;
 }
 
 .status-active {
-    color: #34c759;
+    color: var(--success-green);
     font-weight: 500;
 }
-
 .status-banned {
-    color: #ff3b30;
+    color: var(--error-red);
     font-weight: 500;
 }
 
@@ -192,28 +211,26 @@ td {
     border-radius: 6px;
     cursor: pointer;
     font-weight: 500;
+    font-size: 0.8rem;
     transition: opacity 0.2s ease;
 }
 .action-btn:hover {
     opacity: 0.8;
 }
-
 .ban-btn {
-    background-color: #ff3b30;
+    background-color: var(--error-red);
     color: white;
 }
-
 .unban-btn {
-    background-color: #34c759;
+    background-color: var(--success-green);
     color: white;
 }
-
 .delete-btn {
-    background-color: #8e8e93;
+    background-color: var(--text-secondary);
     color: white;
 }
 
-/* --- Custom Modal --- */
+/* --- Custom Modal (Admin) --- */
 .modal-backdrop {
     position: fixed;
     top: 0;
@@ -227,37 +244,37 @@ td {
     z-index: 1000;
 }
 .modal-box {
-    background: #ffffff;
-    color: #1c1e21;
+    background: var(--component-bg);
+    color: var(--text-dark);
     padding: 24px;
-    border-radius: 12px;
+    border-radius: var(--border-radius);
     box-shadow: 0 5px 15px rgba(0,0,0,0.3);
     text-align: center;
     max-width: 400px;
     width: 90%;
 }
+.modal-box h3 {
+    margin-bottom: 12px;
+}
 .modal-box p {
     margin-bottom: 20px;
-    font-size: 16px;
+    font-size: 0.9rem;
+    color: #65676b;
 }
 .modal-buttons {
     display: flex;
     justify-content: center;
     gap: 12px;
 }
-.modal-buttons button {
+.modal-btn {
     padding: 10px 20px;
     border-radius: 8px;
     border: none;
     cursor: pointer;
     font-weight: 600;
-    font-size: 14px;
+    font-size: 0.9rem;
 }
-#modal-confirm-btn {
-    /* Default color is handled by its class, e.g., .ban-btn */
-    color: white;
-}
-#modal-cancel-btn {
+.modal-btn-cancel {
     background-color: #e4e6eb;
     color: #1c1e21;
 }

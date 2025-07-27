@@ -1,67 +1,5 @@
-// admin/admin.js
-
-/*
-NOTE FOR MODAL FUNCTIONALITY:
-The following HTML should be added inside the <body> of `admin/index.html` for the custom modals to work.
-<div id="modal-backdrop" class="modal-backdrop" style="display: none;">
-    <div id="modal-box" class="modal-box">
-        <p id="modal-text"></p>
-        <div id="modal-buttons" class="modal-buttons">
-            <button id="modal-confirm-btn" class="action-btn"></button>
-            <button id="modal-cancel-btn" class="action-btn">Cancel</button>
-        </div>
-    </div>
-</div>
-
-And the following CSS should be added to `admin/style.css`:
-.modal-backdrop {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.6);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-}
-.modal-box {
-    background: #2c2c2e;
-    color: #ffffff;
-    padding: 24px;
-    border-radius: 12px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-    text-align: center;
-    max-width: 400px;
-    width: 90%;
-}
-.modal-box p {
-    margin-bottom: 20px;
-    font-size: 16px;
-}
-.modal-buttons {
-    display: flex;
-    justify-content: center;
-    gap: 12px;
-}
-.modal-buttons button {
-    padding: 10px 20px;
-    border-radius: 8px;
-    border: none;
-    cursor: pointer;
-    font-weight: 600;
-}
-#modal-confirm-btn {
-    background-color: #ff3b30; /* Default to destructive action color */
-    color: white;
-}
-#modal-cancel-btn {
-    background-color: #555;
-    color: white;
-}
-*/
-
+// admin.js - Admin Panel Script for User and Content Management
+// This script handles the admin login, user management, and content moderation functionalities.
 import {
     getFirestore,
     collection,
@@ -70,13 +8,14 @@ import {
     updateDoc,
     deleteDoc,
     query,
-    onSnapshot
-} from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+    onSnapshot,
+    getCountFromServer
+} from "https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore.js";
 
 document.addEventListener('DOMContentLoaded', () => {
     const db = getFirestore();
 
-    // DOM Elements
+    // --- DOM Elements ---
     const loginContainer = document.getElementById('login-container');
     const adminPanel = document.getElementById('admin-panel');
     const loginForm = document.getElementById('admin-login-form');
@@ -85,49 +24,39 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Stats Elements
     const totalUsersStat = document.getElementById('total-users-stat');
-    const totalMessagesStat = document.getElementById('total-messages-stat');
+    const totalGroupsStat = document.getElementById('total-groups-stat');
     const reportedUsersStat = document.getElementById('reported-users-stat');
 
     // Table Containers
-    const userManagementTableContainer = document.getElementById('user-management-table');
-    const reportedContentTableContainer = document.getElementById('reported-content-table');
-    
-    // Modal Elements
-    const modalBackdrop = document.getElementById('modal-backdrop');
-    const modalText = document.getElementById('modal-text');
-    const modalConfirmBtn = document.getElementById('modal-confirm-btn');
-    const modalCancelBtn = document.getElementById('modal-cancel-btn');
+    const userManagementTable = document.getElementById('user-management-table');
+    const reportedContentTable = document.getElementById('reported-content-table');
 
-    // --- Modal Logic ---
-    let onConfirmCallback = null;
+    // --- Modal Control ---
+    const modal = {
+        backdrop: document.getElementById('modal-backdrop'),
+        title: document.getElementById('modal-title'),
+        text: document.getElementById('modal-text'),
+        confirmBtn: document.getElementById('modal-confirm-btn'),
+        cancelBtn: document.getElementById('modal-cancel-btn'),
+        _onConfirm: null,
 
-    function showModal(text, confirmText, confirmClass, onConfirm) {
-        modalText.textContent = text;
-        modalConfirmBtn.textContent = confirmText;
-        modalConfirmBtn.className = `action-btn ${confirmClass}`;
-        onConfirmCallback = onConfirm;
-        modalBackdrop.style.display = 'flex';
-    }
-    
-    function showAlert(text) {
-        showModal(text, 'OK', '', () => closeModal());
-        modalCancelBtn.style.display = 'none';
-    }
-
-    function closeModal() {
-        modalBackdrop.style.display = 'none';
-        onConfirmCallback = null;
-        modalCancelBtn.style.display = 'inline-block'; // Reset cancel button
-    }
-
-    modalConfirmBtn.addEventListener('click', () => {
-        if (onConfirmCallback) {
-            onConfirmCallback();
+        show: function({ title, text, confirmText, confirmClass, onConfirm }) {
+            this.title.textContent = title;
+            this.text.textContent = text;
+            this.confirmBtn.textContent = confirmText;
+            this.confirmBtn.className = `modal-btn ${confirmClass}`;
+            this._onConfirm = onConfirm;
+            this.backdrop.style.display = 'flex';
+        },
+        hide: function() {
+            this.backdrop.style.display = 'none';
+            this._onConfirm = null;
         }
-        closeModal();
+    };
+    modal.confirmBtn.addEventListener('click', () => {
+        if (modal._onConfirm) modal._onConfirm();
     });
-
-    modalCancelBtn.addEventListener('click', closeModal);
+    modal.cancelBtn.addEventListener('click', () => modal.hide());
 
 
     // --- Authentication Logic ---
@@ -136,6 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const user = document.getElementById('admin-user').value;
         const pass = document.getElementById('admin-pass').value;
 
+        // Corrected hardcoded credentials as per instructions
         if (user === 'oxyisbad' && pass === 'Bas3sec639') {
             sessionStorage.setItem('adminAuthenticated', 'true');
             showAdminPanel();
@@ -160,6 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
         adminPanel.style.display = 'none';
     }
 
+    // Check session storage on page load
     if (sessionStorage.getItem('adminAuthenticated') === 'true') {
         showAdminPanel();
     } else {
@@ -169,20 +100,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Data Loading and Rendering ---
     function loadAdminData() {
-        // Use onSnapshot for real-time updates on users
-        const usersQuery = query(collection(db, "users"));
-        onSnapshot(usersQuery, (snapshot) => {
-            totalUsersStat.textContent = snapshot.size;
-            renderUserTable(snapshot);
-        });
+        // Load stats with real-time listeners
+        const usersCol = collection(db, "users");
+        onSnapshot(usersCol, (snapshot) => totalUsersStat.textContent = snapshot.size);
+        
+        const chatsCol = collection(db, "chats");
+        onSnapshot(chatsCol, (snapshot) => totalGroupsStat.textContent = snapshot.size);
 
-        totalMessagesStat.textContent = 'N/A'; // Placeholder
-
-        const reportsQuery = query(collection(db, "reports"));
-        onSnapshot(reportsQuery, (snapshot) => {
+        const reportsCol = collection(db, "reports");
+        onSnapshot(reportsCol, (snapshot) => {
             reportedUsersStat.textContent = snapshot.size;
             renderReportsTable(snapshot);
         });
+
+        // Load Users table
+        onSnapshot(query(usersCol), (snapshot) => renderUserTable(snapshot));
     }
 
     function renderUserTable(usersSnapshot) {
@@ -192,74 +124,75 @@ document.addEventListener('DOMContentLoaded', () => {
                     <tr>
                         <th>User ID</th>
                         <th>Email</th>
-                        <th>Username</th>
+                        <th>Display Name</th>
                         <th>Status</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
-                <tbody>
-        `;
-        usersSnapshot.forEach(userDoc => {
-            const user = userDoc.data();
-            const isBanned = user.isBanned || false;
-            tableHTML += `
-                <tr>
-                    <td>${userDoc.id}</td>
-                    <td>${user.email}</td>
-                    <td>${user.username}</td>
-                    <td><span class="status-${isBanned ? 'banned' : 'active'}">${isBanned ? 'Banned' : 'Active'}</span></td>
-                    <td>
-                        <button class="action-btn ${isBanned ? 'unban-btn' : 'ban-btn'}" data-uid="${userDoc.id}">
-                            ${isBanned ? 'Unban' : 'Ban'}
-                        </button>
-                    </td>
-                </tr>
-            `;
-        });
+                <tbody>`;
+        if (usersSnapshot.empty) {
+            tableHTML += `<tr><td colspan="5">No users found.</td></tr>`;
+        } else {
+            usersSnapshot.forEach(userDoc => {
+                const user = userDoc.data();
+                const isBanned = user.isBanned || false;
+                tableHTML += `
+                    <tr>
+                        <td>${userDoc.id}</td>
+                        <td>${user.email || 'N/A (Guest)'}</td>
+                        <td>${user.displayName}</td>
+                        <td><span class="status-${isBanned ? 'banned' : 'active'}">${isBanned ? 'Banned' : 'Active'}</span></td>
+                        <td>
+                            <button class="action-btn ${isBanned ? 'unban-btn' : 'ban-btn'}" data-uid="${userDoc.id}">
+                                ${isBanned ? 'Unban' : 'Ban'}
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
         tableHTML += `</tbody></table>`;
-        userManagementTableContainer.innerHTML = tableHTML;
+        userManagementTable.innerHTML = tableHTML;
     }
 
     function renderReportsTable(reportsSnapshot) {
-        if (reportsSnapshot.empty) {
-            reportedContentTableContainer.innerHTML = `<p>No active reports.</p>`;
-            return;
-        }
-
         let tableHTML = `
             <table>
                 <thead>
                     <tr>
-                        <th>Reported User</th>
-                        <th>Reporter</th>
+                        <th>Reported User ID</th>
+                        <th>Reporter ID</th>
                         <th>Reason</th>
                         <th>Timestamp</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
-                <tbody>
-        `;
-        reportsSnapshot.forEach(reportDoc => {
-            const report = reportDoc.data();
-            tableHTML += `
-                <tr>
-                    <td>${report.reportedUserId}</td>
-                    <td>${report.reporterId}</td>
-                    <td>${report.reason}</td>
-                    <td>${report.timestamp ? new Date(report.timestamp.seconds * 1000).toLocaleString() : 'N/A'}</td>
-                    <td>
-                        <button class="action-btn delete-btn" data-report-id="${reportDoc.id}">Dismiss</button>
-                        <button class="action-btn ban-btn" data-uid="${report.reportedUserId}">Ban User</button>
-                    </td>
-                </tr>
-            `;
-        });
+                <tbody>`;
+        if (reportsSnapshot.empty) {
+            tableHTML += `<tr><td colspan="5">No active reports.</td></tr>`;
+        } else {
+            reportsSnapshot.forEach(reportDoc => {
+                const report = reportDoc.data();
+                tableHTML += `
+                    <tr>
+                        <td>${report.reportedUserId}</td>
+                        <td>${report.reporterId}</td>
+                        <td>${report.reason}</td>
+                        <td>${report.timestamp ? new Date(report.timestamp.seconds * 1000).toLocaleString() : 'N/A'}</td>
+                        <td>
+                            <button class="action-btn delete-btn" data-report-id="${reportDoc.id}">Dismiss</button>
+                            <button class="action-btn ban-btn" data-uid="${report.reportedUserId}">Ban User</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
         tableHTML += `</tbody></table>`;
-        reportedContentTableContainer.innerHTML = tableHTML;
+        reportedContentTable.innerHTML = tableHTML;
     }
 
 
-    // --- Admin Actions (Event Delegation) ---
+    // --- Admin Actions (Event Delegation on the body) ---
     document.body.addEventListener('click', async (e) => {
         const target = e.target;
         const uid = target.dataset.uid;
@@ -267,27 +200,43 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Ban User
         if (target.classList.contains('ban-btn') && uid) {
-            showModal(`Are you sure you want to ban user ${uid}?`, 'Ban User', 'ban-btn', async () => {
-                const userRef = doc(db, "users", uid);
-                await updateDoc(userRef, { isBanned: true });
-                showAlert(`User ${uid} has been banned.`);
+            modal.show({
+                title: 'Confirm Ban',
+                text: `Are you sure you want to ban user ${uid}? They will be logged out and unable to sign in.`,
+                confirmText: 'Ban User',
+                confirmClass: 'ban-btn',
+                onConfirm: async () => {
+                    await updateDoc(doc(db, "users", uid), { isBanned: true });
+                    modal.hide();
+                }
             });
         }
         
         // Unban User
         if (target.classList.contains('unban-btn') && uid) {
-            showModal(`Are you sure you want to unban user ${uid}?`, 'Unban User', 'unban-btn', async () => {
-                const userRef = doc(db, "users", uid);
-                await updateDoc(userRef, { isBanned: false });
-                showAlert(`User ${uid} has been unbanned.`);
+            modal.show({
+                title: 'Confirm Unban',
+                text: `Are you sure you want to unban user ${uid}? They will be able to sign in again.`,
+                confirmText: 'Unban User',
+                confirmClass: 'unban-btn',
+                onConfirm: async () => {
+                    await updateDoc(doc(db, "users", uid), { isBanned: false });
+                    modal.hide();
+                }
             });
         }
 
         // Dismiss Report
         if (target.classList.contains('delete-btn') && reportId) {
-            showModal(`Are you sure you want to dismiss report ${reportId}?`, 'Dismiss', 'delete-btn', async () => {
-                await deleteDoc(doc(db, "reports", reportId));
-                showAlert(`Report ${reportId} dismissed.`);
+            modal.show({
+                title: 'Confirm Dismissal',
+                text: `Are you sure you want to dismiss report ${reportId}? This cannot be undone.`,
+                confirmText: 'Dismiss Report',
+                confirmClass: 'delete-btn',
+                onConfirm: async () => {
+                    await deleteDoc(doc(db, "reports", reportId));
+                    modal.hide();
+                }
             });
         }
     });
