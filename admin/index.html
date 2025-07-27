@@ -81,22 +81,36 @@
         </div>
     </div>
 
-    <!-- Firebase SDK -->
+    <!-- Firebase SDK & Initialization -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
-        // NOTE: Replace with your actual Firebase config from your project settings.
-        const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_AUTH_DOMAIN",
-            databaseURL: "YOUR_DATABASE_URL",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_STORAGE_BUCKET",
-            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-            appId: "YOUR_APP_ID"
-        };
-        const app = initializeApp(firebaseConfig);
-    </script>
-    <script src="admin.js" type="module"></script>
 
+        async function initializeAdmin() {
+            try {
+                // Fetch the configuration from our secure serverless function
+                const response = await fetch('/api/get-firebase-config');
+                if (!response.ok) {
+                    throw new Error('Could not fetch Firebase config.');
+                }
+                const firebaseConfig = await response.json();
+
+                // Initialize Firebase
+                initializeApp(firebaseConfig);
+
+                // Load the admin panel logic
+                await import('./admin.js');
+
+            } catch (error) {
+                console.error("Failed to initialize admin panel:", error);
+                // Display error on the login page itself
+                const loginError = document.getElementById('login-error');
+                if(loginError) {
+                    loginError.textContent = 'Error: Could not connect to services.';
+                }
+            }
+        }
+        
+        initializeAdmin();
+    </script>
 </body>
 </html>
