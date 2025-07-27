@@ -40,7 +40,7 @@
                     <p id="total-messages-stat">0</p>
                 </div>
                 <div class="stat-card">
-                    <h2>Reported Users</h2>
+                    <h2>Reported Content</h2>
                     <p id="reported-users-stat">0</p>
                 </div>
             </section>
@@ -61,11 +61,23 @@
         </main>
     </div>
 
+    <!-- Custom Modal for confirmations and alerts -->
+    <div id="modal-backdrop" class="modal-backdrop" style="display: none;">
+        <div id="modal-box" class="modal-box">
+            <p id="modal-text"></p>
+            <div id="modal-buttons" class="modal-buttons">
+                <button id="modal-confirm-btn" class="action-btn"></button>
+                <button id="modal-cancel-btn" class="action-btn">Cancel</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+        // NOTE: Replace with your actual Firebase config from your project settings.
+        // In a real build process, these would be replaced by environment variables.
         const firebaseConfig = {
-            // NOTE: Replace with your actual Firebase config from your project settings
             apiKey: "YOUR_API_KEY",
             authDomain: "YOUR_AUTH_DOMAIN",
             databaseURL: "YOUR_DATABASE_URL",
